@@ -1,0 +1,60 @@
+#include <SoftwareSerial.h>
+SoftwareSerial SIM900(7, 8); // gsm module connected here
+String textForSMS;
+ 
+int FlameSensor = A1;       // Flame Sensor
+int Buzzer = 9;           // Alarm/light can be connected with this Buzzer
+ 
+void setup() {
+ 
+randomSeed(analogRead(0));
+Serial.begin(9600);
+SIM900.begin(9600); // original 19200. while enter 9600 for sim900A
+Serial.println(" logging time completed!");
+pinMode(FlameSensor, INPUT); 
+pinMode(Buzzer, OUTPUT); 
+digitalWrite(Buzzer, LOW); 
+delay(5000); // wait for 5 seconds
+  
+}
+ 
+void loop() {
+ 
+  int a = analogRead(FlameSensor); //read analog input
+  if (a > 300) // 
+  {
+  textForSMS =  "\nFire Detected!";  
+  analogWrite(Buzzer, 200); 
+  sendSMS(textForSMS);
+  Serial.println(a);
+  Serial.println(textForSMS);
+  Serial.println("message sent."); 
+  delay(8000);
+  }
+//  if ( digitalRead(FlameSensor) == LOW) // 
+  else
+  {
+  Serial.println("No Fire Detected"); 
+  Serial.println(a);
+  digitalWrite(Buzzer, LOW);
+  delay(1000);
+  }
+  
+}
+ 
+ 
+void sendSMS(String message)
+{
+  SIM900.print("AT+CMGF=1\r");                     // AT command to send SMS message
+  delay(1000);
+ SIM900.println("AT+CMGS = \"+91xxxxxxxxxx\"");  // recipient's mobile number, in international format
+ 
+  delay(1000);
+  SIM900.println(message);                         // message to send
+  delay(1000);
+  SIM900.println((char)26);                        // End AT command with a ^Z, ASCII code 26
+  delay(1000); 
+  SIM900.println();
+  delay(100);                                     // give module time to send SMS
+ 
+}
